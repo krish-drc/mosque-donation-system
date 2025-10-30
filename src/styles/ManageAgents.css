@@ -1,0 +1,34 @@
+.custom-table th,
+.custom-table td {
+  vertical-align: middle;
+  text-align: center;
+  font-size: 13px;
+  padding: 0.75rem 0.5rem;
+}
+
+.custom-table thead th {
+  font-size: 14px;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #f1f5f9; /* Light hover effect */
+}
+
+/* Scrollable table container */
+.table-responsive {
+  overflow-x: auto;
+  max-height: 500px; /* Optional: fix height if needed */
+}
+
+/* Buttons alignment */
+.btn i {
+  vertical-align: middle;
+}
+
+/* Pagination styling */
+.pagination-container {
+  background-color: #fff;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}

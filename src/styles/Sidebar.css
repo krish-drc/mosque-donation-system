@@ -1,0 +1,91 @@
+/* Sidebar container */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #1e3a8a; /* Dark Blue Background */
+  color: #f8f9fa;
+  padding: 20px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow-y: auto;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+/* Sidebar header */
+.sidebar-header {
+  color: #60a5fa; /* Light Blue */
+  margin-bottom: 30px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Main menu */
+.sidebar-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.menu-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 6px;
+  transition: 0.3s;
+}
+
+.menu-btn:hover {
+  background-color: #60a5fa; /* Light Blue Hover */
+  color: #1e3a8a; /* Dark Blue text on hover */
+}
+
+/* Dashboard button special style */
+.dashboard-btn {
+  background-color: #3b82f6; /* Bright Blue */
+  color: #f8f9fa;
+  text-decoration: none;
+}
+
+/* Submenus */
+.submenu {
+  list-style: none;
+  padding-left: 15px;
+  margin-top: 6px;
+}
+
+.submenu li {
+  margin-bottom: 6px;
+}
+
+.submenu-btn {
+  display: block;
+  width: 90%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #60a5fa; /* Light Blue border */
+  background-color: #2563eb; /* Medium Blue */
+  color: #f8f9fa;
+  text-decoration: none;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.submenu-btn:hover {
+  background-color: #3b82f6; /* Light Blue hover */
+  color: #1e3a8a;
+}
+
+/* Main buttons (Members, Agents, Funds) */
+.main-btn {
+  background-color: transparent;
+  color: #f8f9fa;
+  border: 1px solid #60a5fa;
+}

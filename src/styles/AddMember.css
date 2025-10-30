@@ -1,0 +1,73 @@
+.add-member-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.add-member-container h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.add-member-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.add-member-col {
+  flex: 1 1 45%;
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-member-col label {
+  margin-top: 0.8rem;
+  margin-bottom: 0.3rem;
+  font-weight: 500;
+}
+
+.add-member-col input,
+.add-member-col select,
+.add-member-col textarea {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.add-member-btn {
+  display: block;
+  margin: 1.5rem 0 0 auto;
+  padding: 0.6rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-member-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.add-member-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.member-info {
+  margin-top: 1.5rem;
+  background-color: #e9f7ef;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}

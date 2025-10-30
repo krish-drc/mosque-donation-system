@@ -1,0 +1,75 @@
+/* Headings */
+.pending-collection h2 {
+  font-weight: 700;
+  color: #0d6efd;
+}
+
+/* Summary boxes */
+.summary-boxes h5 {
+  font-weight: 600;
+  background: #f8f9fa;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* Table container */
+.table-responsive {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  border-radius: 10px;
+}
+
+/* Table */
+.table th, .table td {
+  text-align: center;
+  vertical-align: middle;
+  font-size: 0.875rem;
+  padding: 0.75rem 0.5rem;
+}
+
+.table thead th {
+  font-size: 0.9rem;
+}
+
+.table tbody tr:hover {
+  background-color: #f1f5f9;
+  transition: background-color 0.2s;
+}
+
+.table-primary th {
+  background-color: #0d6efd;
+  color: #fff;
+}
+
+/* Buttons */
+.btn-sm {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.btn-warning {
+  background-color: #ffc107;
+  border-color: #ffc107;
+  color: #212529;
+}
+
+.btn-info {
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
+  color: #fff;
+}
+
+/* Modal */
+.modal-body textarea {
+  resize: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .summary-boxes {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

@@ -1,0 +1,71 @@
+.add-agent-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #f9f9f9;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.add-agent-container h2 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.add-agent-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.add-agent-col {
+  flex: 1 1 45%; /* two columns layout */
+  min-width: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+.add-agent-col label {
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.add-agent-col input,
+.add-agent-col select {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+.add-agent-btn {
+  display: block;
+  margin: 1.5rem 0 0 auto;
+  padding: 0.6rem 1.5rem;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-agent-btn:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.add-agent-btn:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.agent-info {
+  margin-top: 1.5rem;
+  background-color: #e9f7ef;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
