@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
-import "../styles/AdminLogin.css";
+import "../component/styles/AdminLogin.css";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");

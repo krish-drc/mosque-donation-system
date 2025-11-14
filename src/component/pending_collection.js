@@ -3,7 +3,7 @@ import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 import DashboardLayout from "./DashboardLayout";
 import { Modal, Button, Form } from "react-bootstrap";
-import "../styles/PendingCollection.css"; // Import CSS
+import "../component/styles/PendingCollection.css";
 
 export default function PendingCollection() {
   const [members, setMembers] = useState([]);
@@ -43,10 +43,16 @@ export default function PendingCollection() {
   // Calculate pending members
   const pendingMembers = members
     .map((m) => {
-      const memberFunds = funds.filter((f) => f.memberID === m.memberID);
-      const totalPaid = memberFunds.reduce((sum, f) => sum + Number(f.amount || 0), 0);
-      const pendingAmount = (Number(m.paymentAmount) || 0) - totalPaid;
-      return { ...m, totalPaid, pendingAmount };
+      const memberFunds = funds.filter((f) => f.memberId === m.memberID);
+      const totalPaid = memberFunds.reduce((sum, f) => sum + (parseFloat(f.amount) || 0), 0);
+      const totalPayment = parseFloat(m.paymentAmount) || 0;
+      const pendingAmount = totalPayment - totalPaid;
+
+      return {
+        ...m,
+        totalPaid,
+        pendingAmount: pendingAmount > 0 ? pendingAmount : 0,
+      };
     })
     .filter((m) => m.pendingAmount > 0);
 
@@ -58,7 +64,9 @@ export default function PendingCollection() {
     setModalType(type);
     setModalMember(member);
     setMessage(
-      `Dear ${member.fullName || "Member"}, your pending payment is LKR ${member.pendingAmount || 0}. Please pay promptly.`
+      `Dear ${member.fullName || "Member"}, your pending payment is LKR ${
+        member.pendingAmount || 0
+      }. Please pay promptly.`
     );
     setShowModal(true);
   };
@@ -68,17 +76,21 @@ export default function PendingCollection() {
     if (!modalMember) return;
     try {
       if (modalType === "sms") {
-        await fetch("/api/send-sms", {
+        await fetch("http://localhost:5000/api/send-sms", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ number: modalMember.contactNumber || "", message }),
         });
         alert(`SMS sent to ${modalMember.fullName || "Member"}`);
       } else if (modalType === "email") {
-        await fetch("/api/send-email", {
+        await fetch("http://localhost:5000/api/send-email", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: modalMember.email || "", subject: "Pending Payment Reminder", message }),
+          body: JSON.stringify({
+            email: modalMember.email || "",
+            subject: "Pending Payment Reminder",
+            message,
+          }),
         });
         alert(`Email sent to ${modalMember.fullName || "Member"}`);
       }
@@ -96,16 +108,18 @@ export default function PendingCollection() {
       <div className="container mt-4 pending-collection">
         <h2 className="text-center mb-4">Pending Collections</h2>
 
+        {/* Summary */}
         <div className="d-flex justify-content-between mb-4 flex-wrap gap-3 summary-boxes">
           <h5 className="text-danger">Total Pending: LKR {totalPending.toLocaleString()}</h5>
           <h5 className="text-success">Total Paid: LKR {totalPaid.toLocaleString()}</h5>
           <h5 className="text-primary">Members with Pending: {pendingMembers.length}</h5>
         </div>
 
+        {/* Table */}
         {loading ? (
           <p>Loading data...</p>
         ) : pendingMembers.length === 0 ? (
-          <p>No pending members!</p>
+          <p>No members with pending payments!</p>
         ) : (
           <div className="table-responsive shadow-sm bg-white rounded">
             <table className="table table-hover text-center mb-0">
@@ -116,7 +130,8 @@ export default function PendingCollection() {
                   <th>Name</th>
                   <th>Contact</th>
                   <th>Email</th>
-                  <th>Total Paid (LKR)</th>
+                  <th>Total Payment (LKR)</th>
+                  <th>Paid (LKR)</th>
                   <th>Pending (LKR)</th>
                   <th>Actions</th>
                 </tr>
@@ -129,12 +144,23 @@ export default function PendingCollection() {
                     <td>{m.fullName || "-"}</td>
                     <td>{m.contactNumber || "-"}</td>
                     <td>{m.email || "-"}</td>
-                    <td>{(m.totalPaid || 0).toLocaleString()}</td>
-                    <td>{(m.pendingAmount || 0).toLocaleString()}</td>
+                    <td>{(parseFloat(m.paymentAmount) || 0).toLocaleString()}</td>
+                    <td>{m.totalPaid.toLocaleString()}</td>
+                    <td className="text-danger fw-bold">{m.pendingAmount.toLocaleString()}</td>
                     <td>
                       <div className="d-flex justify-content-center gap-2">
-                        <button className="btn btn-sm btn-warning" onClick={() => openModal("sms", m)}>📩 SMS</button>
-                        <button className="btn btn-sm btn-info" onClick={() => openModal("email", m)}>✉️ Email</button>
+                        <button
+                          className="btn btn-sm btn-warning"
+                          onClick={() => openModal("sms", m)}
+                        >
+                          📩 SMS
+                        </button>
+                        <button
+                          className="btn btn-sm btn-info"
+                          onClick={() => openModal("email", m)}
+                        >
+                          ✉️ Email
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -147,17 +173,28 @@ export default function PendingCollection() {
         {/* Modal */}
         <Modal show={showModal} onHide={() => setShowModal(false)}>
           <Modal.Header closeButton>
-            <Modal.Title>{modalType === "sms" ? "Send SMS" : "Send Email"} to {modalMember?.fullName || "Member"}</Modal.Title>
+            <Modal.Title>
+              {modalType === "sms" ? "Send SMS" : "Send Email"} to {modalMember?.fullName || "Member"}
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form.Group>
               <Form.Label>Message</Form.Label>
-              <Form.Control as="textarea" rows={5} value={message} onChange={(e) => setMessage(e.target.value)} />
+              <Form.Control
+                as="textarea"
+                rows={5}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+              />
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button variant="primary" onClick={sendMessage}>Send</Button>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={sendMessage}>
+              Send
+            </Button>
           </Modal.Footer>
         </Modal>
       </div>

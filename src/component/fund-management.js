@@ -4,7 +4,7 @@ import { collection, addDoc, getDocs, deleteDoc, doc, updateDoc } from "firebase
 import { Button, Form, Table, Modal } from "react-bootstrap";
 import DashboardLayout from "../component/DashboardLayout";
 import { FaEdit, FaTrash } from "react-icons/fa";
-import "../styles/FundManager.css";
+import "../component/styles/FundManager.css";
 
 export default function FundManager() {
   const [memberId, setMemberId] = useState("");
@@ -17,20 +17,17 @@ export default function FundManager() {
   const [filter, setFilter] = useState("All");
   const [memberSearch, setMemberSearch] = useState("");
 
-  // Edit modal state
   const [showModal, setShowModal] = useState(false);
   const [editFund, setEditFund] = useState(null);
 
   const fundCollection = collection(db, "funds");
   const memberCollection = collection(db, "members");
 
-  // Fetch funds
   const fetchFunds = async () => {
     const data = await getDocs(fundCollection);
     setFunds(data.docs.map((doc) => ({ ...doc.data(), docId: doc.id })));
   };
 
-  // Fetch members
   const fetchMembers = async () => {
     const data = await getDocs(memberCollection);
     setMembers(data.docs.map((doc) => ({ ...doc.data(), docId: doc.id })));
@@ -98,7 +95,17 @@ export default function FundManager() {
     fetchFunds();
   };
 
+  // ✅ Filter funds based on donation type
   const filteredFunds = filter === "All" ? funds : funds.filter((f) => f.type === filter);
+
+  // ✅ Build unique member list with filtered funds
+  const membersWithFilteredFunds = members.map((m) => {
+    const memberFunds = filteredFunds.filter((f) => f.memberId === m.memberID);
+    const totalPaid = memberFunds.reduce((sum, f) => sum + f.amount, 0);
+    const pending = (parseFloat(m.paymentAmount) || 0) - totalPaid;
+    const lastFund = memberFunds.length > 0 ? memberFunds[memberFunds.length - 1] : null;
+    return { ...m, memberFunds, totalPaid, pending, lastFund };
+  });
 
   return (
     <DashboardLayout>
@@ -147,6 +154,7 @@ export default function FundManager() {
               <option value="Yearly">Yearly</option>
             </Form.Select>
           </Form.Group>
+
           <Form.Group className="mb-2">
             <Form.Control
               type="number"
@@ -159,7 +167,7 @@ export default function FundManager() {
           <Button variant="primary" type="submit">Add Fund</Button>
         </Form>
 
-        {/* Filter */}
+        {/* Filter Dropdown */}
         <Form.Group className="mb-3">
           <Form.Select value={filter} onChange={(e) => setFilter(e.target.value)}>
             <option value="All">All Donations</option>
@@ -186,45 +194,38 @@ export default function FundManager() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m, index) => {
-                const memberFunds = funds.filter((f) => f.memberId === m.memberID);
-                const totalPaid = memberFunds.reduce((sum, f) => sum + f.amount, 0);
-                const pending = (parseFloat(m.paymentAmount) || 0) - totalPaid;
-                const lastFund = memberFunds.length > 0 ? memberFunds[memberFunds.length - 1] : null;
-
-                return (
-                  <tr key={m.docId}>
-                    <td>{index + 1}</td>
-                    <td>{m.memberID}</td>
-                    <td>{m.fullName}</td>
-                    <td>{m.contactNumber}</td>
-                    <td>{m.donationPreference || "N/A"}</td>
-                    <td>{m.paymentAmount || 0}</td>
-                    <td>{totalPaid}</td>
-                    <td>{pending >= 0 ? pending : 0}</td>
-                    <td>
-                      {lastFund ? (
-                        <div className="d-flex justify-content-center gap-2">
-                          <FaEdit
-                            style={{ cursor: "pointer", color: "#ffc107" }}
-                            size={18}
-                            onClick={() => openEditModal(lastFund)}
-                            title="Edit"
-                          />
-                          <FaTrash
-                            style={{ cursor: "pointer", color: "#dc3545" }}
-                            size={18}
-                            onClick={() => deleteFund(lastFund.docId)}
-                            title="Delete"
-                          />
-                        </div>
-                      ) : (
-                        <span>N/A</span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {membersWithFilteredFunds.map((m, index) => (
+                <tr key={m.docId}>
+                  <td>{index + 1}</td>
+                  <td>{m.memberID}</td>
+                  <td>{m.fullName}</td>
+                  <td>{m.contactNumber}</td>
+                  <td>{m.donationPreference || "N/A"}</td>
+                  <td>{m.paymentAmount || 0}</td>
+                  <td>{m.totalPaid}</td>
+                  <td>{m.pending >= 0 ? m.pending : 0}</td>
+                  <td>
+                    {m.lastFund ? (
+                      <div className="d-flex justify-content-center gap-2">
+                        <FaEdit
+                          style={{ cursor: "pointer", color: "#ffc107" }}
+                          size={18}
+                          onClick={() => openEditModal(m.lastFund)}
+                          title="Edit"
+                        />
+                        <FaTrash
+                          style={{ cursor: "pointer", color: "#dc3545" }}
+                          size={18}
+                          onClick={() => deleteFund(m.lastFund.docId)}
+                          title="Delete"
+                        />
+                      </div>
+                    ) : (
+                      <span>N/A</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </Table>
         </div>

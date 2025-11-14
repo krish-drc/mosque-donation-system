@@ -40,3 +40,15 @@
 .pagination-container button {
   min-width: 100px;
 }
+
+.custom-table {
+  text-align: left;
+}
+
+.table-responsive {
+  margin-left: 0;
+}
+
+.container, .p-3 {
+  padding-left: 0 !important;
+}

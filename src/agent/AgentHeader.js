@@ -1,20 +1,23 @@
 import React from "react";
-import { signOut } from "firebase/auth";
-import { auth } from "../firebase";
+import { useNavigate } from "react-router-dom";
 
-export default function Header() {
-  const handleLogout = async () => {
-    await signOut(auth);
-    window.location.href = "/"; // redirect to login
+export default function AgentHeader() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("agentData");
+    navigate("/agent/login");
   };
 
   return (
     <nav className="w-full bg-indigo-700 text-white flex items-center justify-between px-6 py-4 shadow-md sticky top-0 z-50">
-      {/* Brand */}
+      {/* Brand / Title */}
       <div className="text-lg md:text-xl font-semibold tracking-wide flex items-center gap-2">
-        🕌 <span className="font-bold">Mosque</span>
-        <span className="text-indigo-200">Donation</span>
-        <span className="hidden sm:inline text-sm text-indigo-200">| Admin Dashboard</span>
+        💼 <span className="font-bold">Agent</span>
+        <span className="text-indigo-200">Dashboard</span>
+        <span className="hidden sm:inline text-sm text-indigo-200">
+          | Mosque Donation
+        </span>
       </div>
 
       {/* Logout Button */}

@@ -1,0 +1,141 @@
+.add-member-container {
+  max-width: 950px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(14px);
+  border-radius: 20px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+  color: #f1f5f9;
+  font-family: "Poppins", "Inter", "Segoe UI", sans-serif;
+  animation: fadeIn 0.7s ease-in-out;
+  letter-spacing: 0.2px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.add-member-container h2 {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.9rem;
+  font-weight: 600;
+  color: #caf0f8;
+  letter-spacing: 0.5px;
+}
+
+.add-member-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.add-member-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.add-member-col label {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #e0f7fa;
+  margin-bottom: 0.3rem;
+}
+
+.add-member-col input,
+.add-member-col select,
+.add-member-col textarea {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.add-member-col input::placeholder,
+.add-member-col textarea::placeholder {
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 300;
+}
+
+.add-member-col input:focus,
+.add-member-col select:focus,
+.add-member-col textarea:focus {
+  border-color: #00b4d8;
+  box-shadow: 0 0 10px rgba(0, 180, 216, 0.5);
+}
+
+.add-member-btn {
+  display: block;
+  margin-left: auto;
+  padding: 0.9rem 2.2rem;
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.add-member-btn:disabled {
+  background: #777;
+  cursor: not-allowed;
+}
+
+.add-member-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #0096c7, #005f73);
+}
+
+.member-info {
+  margin-top: 2rem;
+  background: rgba(0, 150, 136, 0.2);
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 150, 136, 0.4);
+  font-weight: 500;
+  color: #d9f99d;
+  animation: fadeIn 0.6s ease-in-out;
+  font-size: 0.95rem;
+}
+
+.alert.alert-info {
+  background: rgba(0, 180, 216, 0.15);
+  border: 1px solid rgba(0, 180, 216, 0.4);
+  color: #caf0f8;
+  padding: 0.9rem 1rem;
+  border-radius: 10px;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Fix white dropdown text issue */
+.add-member-col select {
+  appearance: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+/* When dropdown opens (options list) */
+.add-member-col select option {
+  background-color: #1e1e1e; /* dark dropdown background */
+  color: #ffffff; /* white text inside dropdown */
+}

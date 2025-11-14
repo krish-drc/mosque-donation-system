@@ -1,18 +1,112 @@
-import React, { useState, useEffect } from "react";
+import * as React from "react";
+import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 import { db } from "../firebase";
 import { collection, getDocs, deleteDoc, doc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import DashboardLayout from "./DashboardLayout";
-import { FaEdit, FaTrash } from "react-icons/fa";
-import "../styles/ManageMembers.css"; // Import CSS
 
-export default function ManageMembers() {
+import {
+  Box,
+  Collapse,
+  IconButton,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Typography,
+  Paper,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Button,
+} from "@mui/material";
+
+import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import { FaEdit, FaTrash } from "react-icons/fa";
+
+function Row({ member, index, handleDelete, agentName }) {
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  return (
+    <React.Fragment>
+      <TableRow>
+        <TableCell>
+          <IconButton size="small" onClick={() => setOpen(!open)}>
+            {open ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+          </IconButton>
+        </TableCell>
+        <TableCell>{index + 1}</TableCell>
+        <TableCell>{member.memberID || "—"}</TableCell>
+        <TableCell>{member.fullName}</TableCell>
+        <TableCell>{member.gender || "N/A"}</TableCell>
+        <TableCell>{member.contactNumber}</TableCell>
+        <TableCell>{member.email}</TableCell>
+        <TableCell>{member.dateJoined}</TableCell>
+        <TableCell>{member.donationPreference || "N/A"}</TableCell>
+        <TableCell>
+          {member.paymentAmount
+            ? `LKR ${Number(member.paymentAmount).toLocaleString()}`
+            : "—"}
+        </TableCell>
+        <TableCell>{agentName || "Unassigned"}</TableCell>
+        <TableCell>{member.secretCode || "N/A"}</TableCell>
+        <TableCell>
+          <Box display="flex" gap={1}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={() => navigate(`/edit-member/${member.id}`)}
+            >
+              <FaEdit />
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              size="small"
+              onClick={() => handleDelete(member.id)}
+            >
+              <FaTrash />
+            </Button>
+          </Box>
+        </TableCell>
+      </TableRow>
+
+      <TableRow>
+        <TableCell colSpan={13} style={{ paddingBottom: 0, paddingTop: 0 }}>
+          <Collapse in={open} timeout="auto" unmountOnExit>
+            <Box margin={1}>
+              <Typography variant="subtitle2" gutterBottom>
+                Address:
+              </Typography>
+              <Typography variant="body2">{member.address || "N/A"}</Typography>
+            </Box>
+          </Collapse>
+        </TableCell>
+      </TableRow>
+    </React.Fragment>
+  );
+}
+
+Row.propTypes = {
+  member: PropTypes.object.isRequired,
+  index: PropTypes.number.isRequired,
+  handleDelete: PropTypes.func.isRequired,
+  agentName: PropTypes.string,
+};
+
+export default function ManageMembersMUI() {
   const [members, setMembers] = useState([]);
+  const [agents, setAgents] = useState([]); // ✅ store all agents
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
-  const [membersPerPage] = useState(5);
+  const [membersPerPage, setMembersPerPage] = useState(5);
   const navigate = useNavigate();
 
   // Fetch members
@@ -23,11 +117,21 @@ export default function ManageMembers() {
     setLoading(false);
   };
 
+  // Fetch agents
+  const fetchAgents = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "agents"));
+      setAgents(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    } catch (err) {
+      console.error("Error loading agents:", err);
+    }
+  };
+
   useEffect(() => {
     fetchMembers();
+    fetchAgents();
   }, []);
 
-  // Delete member
   const handleDelete = async (id) => {
     if (window.confirm("Are you sure you want to delete this member?")) {
       await deleteDoc(doc(db, "members", id));
@@ -36,201 +140,185 @@ export default function ManageMembers() {
     }
   };
 
-  // Filter
+  // Filter & Pagination
   const filteredMembers =
     filterType === "All"
       ? members
       : members.filter(
           (m) =>
-            m.donationPreference &&
-            m.donationPreference.toLowerCase() === filterType.toLowerCase()
+            m.donationPreference?.toLowerCase() ===
+            filterType.toLowerCase()
         );
 
-  // Pagination
   const indexOfLast = currentPage * membersPerPage;
   const indexOfFirst = indexOfLast - membersPerPage;
   const currentMembers = filteredMembers.slice(indexOfFirst, indexOfLast);
   const totalPages = Math.ceil(filteredMembers.length / membersPerPage);
 
-  const nextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+  const nextPage = () =>
+    currentPage < totalPages && setCurrentPage(currentPage + 1);
+  const prevPage = () =>
+    currentPage > 1 && setCurrentPage(currentPage - 1);
 
-  const prevPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  // Total Payment
   const totalPayment = filteredMembers.reduce(
     (sum, member) => sum + Number(member.paymentAmount || 0),
     0
   );
 
+  // Helper: Get Agent Name by ID
+  const getAgentName = (agentId) => {
+    const agent = agents.find((a) => a.id === agentId);
+    return agent ? agent.fullName || agent.agentName || agent.email : "";
+  };
+
   return (
     <DashboardLayout>
-      <div className="container mt-4">
-        {/* Header */}
-        <div className="d-flex justify-content-between align-items-center flex-wrap mb-4">
-          <h2 className="fw-bold text-primary mb-2">Manage Mosque Members</h2>
-          <div className="d-flex flex-wrap align-items-center gap-3">
-            {/* Add Member Button */}
-            <button
-              className="btn btn-success"
-              onClick={() => navigate("/add-member")}
+      <Box p={2}>
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={2}
+        >
+          <Typography variant="h5" color="primary">
+            Manage Mosque Members
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => navigate("/add-member")}
+          >
+            ➕ Add Member
+          </Button>
+        </Box>
+
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          mb={2}
+          flexWrap="wrap"
+          gap={2}
+        >
+          <FormControl size="small" sx={{ minWidth: 150 }}>
+            <InputLabel>Filter by</InputLabel>
+            <Select
+              value={filterType}
+              label="Filter by"
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setCurrentPage(1);
+              }}
             >
-              ➕ Add Member
-            </button>
+              <MenuItem value="All">All</MenuItem>
+              <MenuItem value="Monthly">Monthly</MenuItem>
+              <MenuItem value="Yearly">Yearly</MenuItem>
+              <MenuItem value="One-time">One-time</MenuItem>
+            </Select>
+          </FormControl>
 
-            {/* Filter Dropdown */}
-            <div>
-              <label className="me-2 fw-bold text-secondary">Filter by:</label>
-              <select
-                className="form-select d-inline-block"
-                style={{ width: "180px" }}
-                value={filterType}
-                onChange={(e) => {
-                  setFilterType(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Yearly">Yearly</option>
-                <option value="One-time">One-time</option>
-              </select>
-            </div>
+          <Typography variant="subtitle1" color="success.main">
+            💰 Total ({filterType}): LKR {totalPayment.toLocaleString()}
+          </Typography>
 
-            {/* Total Payment */}
-            <h5 className="text-success mb-0">
-              💰 Total ({filterType}): LKR {totalPayment.toLocaleString()}
-            </h5>
-          </div>
-        </div>
+          <FormControl size="small" sx={{ minWidth: 100 }}>
+            <InputLabel>Rows per page</InputLabel>
+            <Select
+              value={membersPerPage}
+              label="Rows per page"
+              onChange={(e) => {
+                setMembersPerPage(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+            >
+              {[5, 10, 20, 50, 100].map((num) => (
+                <MenuItem key={num} value={num}>
+                  {num}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
 
-        {msg && <div className="alert alert-info">{msg}</div>}
+        {msg && (
+          <Typography color="info.main" mb={1}>
+            {msg}
+          </Typography>
+        )}
 
-        {/* Table */}
-        <div className="table-responsive shadow-sm bg-white rounded p-3">
-          {loading ? (
-            <p className="p-3 text-center">Loading members...</p>
-          ) : currentMembers.length === 0 ? (
-            <p className="p-3 text-center">No members found.</p>
-          ) : (
-            <table className="table table-hover align-middle mb-0 text-center custom-table">
-              <thead className="table-primary">
-                <tr>
-                  <th>#</th>
-                  <th>Member ID</th>
-                  <th>Full Name</th>
-                  <th>Gender</th>
-                  <th>Contact</th>
-                  <th>Email</th>
-                  <th>Address</th>
-                  <th>Date Joined</th>
-                  <th>Donation Type</th>
-                  <th>Payment (LKR)</th>
-                  <th>Secret Code</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentMembers.map((member, index) => (
-                  <tr key={member.id}>
-                    <td>{indexOfFirst + index + 1}</td>
-                    <td>
-                      <span className="badge bg-info text-dark">
-                        {member.memberID || "—"}
-                      </span>
-                    </td>
-                    <td>{member.fullName}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          member.gender === "Male"
-                            ? "bg-primary"
-                            : "bg-pink text-white"
-                        }`}
-                      >
-                        {member.gender || "N/A"}
-                      </span>
-                    </td>
-                    <td>{member.contactNumber}</td>
-                    <td>{member.email}</td>
-                    <td className="text-wrap" style={{ maxWidth: "200px" }}>
-                      {member.address}
-                    </td>
-                    <td>{member.dateJoined}</td>
-                    <td>
-                      <span
-                        className={`badge ${
-                          member.donationPreference === "Monthly"
-                            ? "bg-success"
-                            : member.donationPreference === "Yearly"
-                            ? "bg-warning text-dark"
-                            : "bg-secondary"
-                        }`}
-                      >
-                        {member.donationPreference || "N/A"}
-                      </span>
-                    </td>
-                    <td>
-                      {member.paymentAmount
-                        ? `LKR ${Number(member.paymentAmount).toLocaleString()}`
-                        : "—"}
-                    </td>
-                    <td>
-                      <span className="badge bg-secondary">
-                        {member.secretCode || "N/A"}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex justify-content-center gap-2">
-                        <button
-                          className="btn btn-sm btn-outline-primary"
-                          title="Edit Member"
-                          onClick={() =>
-                            navigate(`/edit-member/${member.id}`)
-                          }
-                        >
-                          <FaEdit />
-                        </button>
-                        <button
-                          className="btn btn-sm btn-outline-danger"
-                          title="Delete Member"
-                          onClick={() => handleDelete(member.id)}
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell />
+                <TableCell>#</TableCell>
+                <TableCell>Member ID</TableCell>
+                <TableCell>Full Name</TableCell>
+                <TableCell>Gender</TableCell>
+                <TableCell>Contact</TableCell>
+                <TableCell>Email</TableCell>
+                <TableCell>Date Joined</TableCell>
+                <TableCell>Donation Type</TableCell>
+                <TableCell>Payment (LKR)</TableCell>
+                <TableCell>Assigned Agent</TableCell> {/* ✅ NEW */}
+                <TableCell>Secret Code</TableCell>
+                <TableCell>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={13} align="center">
+                    Loading members...
+                  </TableCell>
+                </TableRow>
+              ) : currentMembers.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={13} align="center">
+                    No members found.
+                  </TableCell>
+                </TableRow>
+              ) : (
+                currentMembers.map((member, idx) => (
+                  <Row
+                    key={member.id}
+                    member={member}
+                    index={indexOfFirst + idx}
+                    handleDelete={handleDelete}
+                    agentName={getAgentName(member.assignedAgent)} // ✅ show name
+                  />
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
 
-        {/* Pagination */}
-        <div className="pagination-container d-flex justify-content-center align-items-center gap-4 mt-4">
-          <button
-            className="btn btn-outline-secondary"
+        <Box
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          gap={2}
+          mt={2}
+        >
+          <Button
+            variant="outlined"
             onClick={prevPage}
             disabled={currentPage === 1}
           >
             ⬅ Previous
-          </button>
-          <span className="fw-bold text-secondary">
+          </Button>
+          <Typography>
             Page {currentPage} of {totalPages || 1}
-          </span>
-          <button
-            className="btn btn-outline-secondary"
+          </Typography>
+          <Button
+            variant="outlined"
             onClick={nextPage}
-            disabled={currentPage === totalPages || totalPages === 0}
+            disabled={
+              currentPage === totalPages || totalPages === 0
+            }
           >
             Next ➡
-          </button>
-        </div>
-      </div>
+          </Button>
+        </Box>
+      </Box>
     </DashboardLayout>
   );
 }

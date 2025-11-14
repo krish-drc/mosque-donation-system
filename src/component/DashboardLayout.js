@@ -1,7 +1,7 @@
 import React from "react";
 import Header from "./Header";
 import Sidebar from "./Sidebar";
-import "../styles/DashboardLayout.css";
+import "../component/styles/DashboardLayout.css";
 
 export default function DashboardLayout({ children }) {
   return (

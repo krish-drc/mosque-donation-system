@@ -15,13 +15,15 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import "../styles/Dashboard.css"; // ✅ import external css
+import "../component/styles/Dashboard.css";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({
     members: 0,
     agents: 0,
     totalFunds: 0,
+    paidAmount: 0,
+    pendingAmount: 0,
     pendingCollections: 0,
   });
 
@@ -32,19 +34,30 @@ export default function Dashboard() {
       try {
         const membersSnap = await getDocs(collection(db, "members"));
         const agentsSnap = await getDocs(collection(db, "agents"));
-        const fundsSnap = await getDocs(collection(db, "donations"));
+        const donationsSnap = await getDocs(collection(db, "donations"));
 
         let totalAmount = 0;
-        let pending = 0;
+        let paidAmount = 0;
+        let pendingAmount = 0;
+        let pendingCount = 0;
+
         let donationByType = { Monthly: 0, Yearly: 0, "One-time": 0 };
 
-        fundsSnap.forEach((doc) => {
+        donationsSnap.forEach((doc) => {
           const data = doc.data();
-          totalAmount += data.amount || 0;
-          if (data.status === "Pending") pending += 1;
+          const amount = Number(data.amount) || 0;
+          totalAmount += amount;
 
-          if (data.donationPreference) {
-            donationByType[data.donationPreference] += data.amount || 0;
+          if (data.status === "Paid") {
+            paidAmount += amount;
+            if (data.donationPreference) {
+              donationByType[data.donationPreference] += amount;
+            }
+          }
+
+          if (data.status === "Pending") {
+            pendingAmount += amount;
+            pendingCount += 1;
           }
         });
 
@@ -52,7 +65,9 @@ export default function Dashboard() {
           members: membersSnap.size,
           agents: agentsSnap.size,
           totalFunds: totalAmount,
-          pendingCollections: pending,
+          paidAmount,
+          pendingAmount,
+          pendingCollections: pendingCount,
         });
 
         setDonationData([
@@ -73,8 +88,15 @@ export default function Dashboard() {
   const cards = [
     { label: "Total Members", value: stats.members, icon: "👥" },
     { label: "Collecting Agents", value: stats.agents, icon: "🧾" },
-    { label: "Total Funds (₹)", value: stats.totalFunds.toLocaleString(), icon: "💰" },
-    { label: "Pending Collections", value: stats.pendingCollections, icon: "⏳" },
+    { label: "Total Funds (LKR)", value: stats.totalFunds.toLocaleString(), icon: "💰" },
+    { label: "Paid Amount (LKR)", value: stats.paidAmount.toLocaleString(), icon: "✅" },
+    { label: "Pending Amount (LKR)", value: stats.pendingAmount.toLocaleString(), icon: "⏳" },
+  ];
+
+  // ✅ Data for Paid vs Pending chart
+  const paidPendingChartData = [
+    { name: "Paid", amount: stats.paidAmount },
+    { name: "Pending", amount: stats.pendingAmount },
   ];
 
   return (
@@ -82,7 +104,7 @@ export default function Dashboard() {
       <div className="dashboard-container">
         <h2 className="dashboard-title">Mosque Donation Dashboard</h2>
 
-        {/* Cards Section */}
+        {/* Summary Cards */}
         <div className="dashboard-cards">
           {cards.map((item, index) => (
             <div className="dashboard-card" key={index}>
@@ -93,10 +115,11 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Charts Section */}
+        {/* Charts */}
         <div className="dashboard-charts">
+          {/* Pie Chart */}
           <div className="dashboard-chart">
-            <h4 className="chart-title">Donation Distribution</h4>
+            <h4 className="chart-title">Donation Distribution (Paid Only)</h4>
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -118,10 +141,13 @@ export default function Dashboard() {
             </ResponsiveContainer>
           </div>
 
+          {/* Members vs Agents */}
           <div className="dashboard-chart">
             <h4 className="chart-title">Members vs Agents Overview</h4>
             <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={[{ name: "Counts", Members: stats.members, Agents: stats.agents }]}>
+              <BarChart
+                data={[{ name: "Counts", Members: stats.members, Agents: stats.agents }]}
+              >
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -129,6 +155,21 @@ export default function Dashboard() {
                 <Legend />
                 <Bar dataKey="Members" fill="#1E88E5" />
                 <Bar dataKey="Agents" fill="#43A047" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* ✅ Paid vs Pending Bar Chart */}
+          <div className="dashboard-chart">
+            <h4 className="chart-title">Paid vs Pending Amount Overview</h4>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={paidPendingChartData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="name" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="amount" fill="#FB8C00" />
               </BarChart>
             </ResponsiveContainer>
           </div>

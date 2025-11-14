@@ -1,0 +1,119 @@
+/* 🌇 Background */
+.agent-login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
+  font-family: "Poppins", sans-serif;
+}
+
+/* 🧩 Card */
+.agent-login-card {
+  background: #ffffff;
+  padding: 40px 45px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.agent-login-card h1 {
+  margin-bottom: 25px;
+  color: #004d40;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* ✏️ Input Fields */
+.agent-login-input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  transition: all 0.3s;
+  margin-bottom: 20px;
+}
+
+.agent-login-input:focus {
+  border-color: #00796b;
+  box-shadow: 0 0 6px rgba(0, 121, 107, 0.3);
+}
+
+/* 👁️ Password Field with Eye Icon */
+.password-field {
+  position: relative;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.password-field input {
+  width: 100%;
+  padding: 12px 42px 12px 14px; /* Right space for eye icon */
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 15px;
+  transition: 0.3s;
+}
+
+.password-field input:focus {
+  border-color: #00796b;
+  box-shadow: 0 0 6px rgba(0, 121, 107, 0.3);
+}
+
+/* 👁️ Eye Icon Style */
+.toggle-eye {
+  position: absolute;
+  right: 14px;
+  top: 35%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #666;
+  font-size: 18px;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.toggle-eye:hover {
+  color: #004d40;
+}
+
+/* 🔘 Button */
+.agent-login-button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, #00796b, #004d40);
+  border: none;
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.agent-login-button:hover {
+  background: linear-gradient(90deg, #004d40, #002d26);
+}
+
+/* ⚠️ Error Message */
+.agent-login-error {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 15px;
+  border-left: 4px solid #c62828;
+}
+
+/* 🦶 Footer */
+.agent-login-footer {
+  margin-top: 25px;
+  font-size: 13px;
+  color: #666;
+}

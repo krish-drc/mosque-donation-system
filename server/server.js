@@ -1,60 +1,78 @@
 const express = require("express");
-const bodyParser = require("body-parser");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
-const twilio = require("twilio");
+// const twilio = require("twilio"); // Uncomment if using Twilio
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// --- Twilio Setup ---
-const accountSid = "YOUR_TWILIO_SID";
-const authToken = "YOUR_TWILIO_AUTH_TOKEN";
-const twilioClient = twilio(accountSid, authToken);
-const twilioNumber = "YOUR_TWILIO_PHONE_NUMBER";
-
-// --- Nodemailer Setup ---
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: "m.krishnanath0716@gmail.com",
-    pass: "YOUR_EMAIL_APP_PASSWORD", // Use App password if 2FA enabled
-  },
-});
-
-// --- SMS Route ---
-app.post("/api/send-sms", async (req, res) => {
-  const { number, message } = req.body;
-  try {
-    await twilioClient.messages.create({
-      body: message,
-      from: twilioNumber,
-      to: number,
-    });
-    res.json({ success: true });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: err.message });
-  }
-});
-
-// --- Email Route ---
+// ✅ --- EMAIL API ---
 app.post("/api/send-email", async (req, res) => {
   const { email, subject, message } = req.body;
+
+  if (!email || !subject || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   try {
-    await transporter.sendMail({
-      from: "m.krishnanath0716@gmail.com",
+    // Configure your SMTP mail server
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      secure: false,
+      auth: {
+        user: "m.krishnanath0716@gmail.com", // 🔹 Replace with your email
+        pass: "nkqz lyjb bdre ngsg", // 🔹 Use an App Password (not your real Gmail password)
+      },
+    });
+
+    const mailOptions = {
+      from: '"Mosque Fund" <m.krishnanath0716@gmail.com>',
       to: email,
       subject,
       text: message,
-    });
-    res.json({ success: true });
+    };
+
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ success: true, message: "Email sent successfully!" });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Email send error:", err);
+    res.status(500).json({ error: "Failed to send email" });
   }
 });
 
-// --- Start server ---
-app.listen(5000, () => console.log("Server running on port 5000"));
+// ✅ --- SMS API (optional) ---
+app.post("/api/send-sms", async (req, res) => {
+  const { number, message } = req.body;
+
+  if (!number || !message) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    // Example using Twilio (if enabled)
+    const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+    await client.messages.create({
+      body: message,
+      from: "+12173029049", // your Twilio number
+      to: number,
+    });
+
+    console.log(`Simulated SMS to ${number}: ${message}`);
+    res.status(200).json({ success: true, message: "SMS sent successfully!" });
+  } catch (err) {
+    console.error("SMS send error:", err);
+    res.status(500).json({ error: "Failed to send SMS" });
+  }
+});
+
+// ✅ Default route
+app.get("/", (req, res) => {
+  res.send("Mosque Fund API running...");
+});
+
+// ✅ Start server
+const PORT = 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

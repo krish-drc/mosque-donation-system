@@ -1,177 +1,179 @@
 import React, { useState, useEffect } from "react";
-import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
-import DashboardLayout from "./DashboardLayout";
-import "../styles/PaymentHistory.css"; // Custom CSS
-import { Table } from "react-bootstrap";
+import { db } from "../firebase";
+import DashboardLayout from "../component/DashboardLayout";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+} from "recharts";
+import "../component/styles/Dashboard.css";
 
-export default function PaymentHistory() {
-  const [members, setMembers] = useState([]);
-  const [funds, setFunds] = useState([]);
+export default function Dashboard() {
+  const [stats, setStats] = useState({
+    members: 0,
+    agents: 0,
+    totalFunds: 0,
+    paidAmount: 0,
+    pendingCollections: 0,
+  });
+
+  const [donationData, setDonationData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filterType, setFilterType] = useState("All");
-
-  // Fetch members
-  const fetchMembers = async () => {
-    const snapshot = await getDocs(collection(db, "members"));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  };
-
-  // Fetch funds/donations
-  const fetchFunds = async () => {
-    const snapshot = await getDocs(collection(db, "funds"));
-    return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const membersData = await fetchMembers();
-      const fundsData = await fetchFunds();
-      setMembers(membersData);
-      setFunds(fundsData);
-      setLoading(false);
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+
+        // ✅ Fetch all collections
+        const membersSnap = await getDocs(collection(db, "members"));
+        const agentsSnap = await getDocs(collection(db, "agents"));
+        const donationsSnap = await getDocs(collection(db, "donations"));
+
+        let totalAmount = 0;
+        let paidAmount = 0;
+        let pendingAmount = 0;
+        let pendingCount = 0;
+
+        // Track donations by type (only paid)
+        let donationByType = { Monthly: 0, Yearly: 0, "One-time": 0 };
+
+        donationsSnap.forEach((doc) => {
+          const data = doc.data();
+          const amount = Number(data.amount) || 0;
+          totalAmount += amount;
+
+          if (data.status === "Paid") {
+            paidAmount += amount;
+            if (data.donationPreference) {
+              donationByType[data.donationPreference] += amount;
+            }
+          }
+
+          if (data.status === "Pending") {
+            pendingAmount += amount;
+            pendingCount += 1;
+          }
+        });
+
+        setStats({
+          members: membersSnap.size,
+          agents: agentsSnap.size,
+          totalFunds: totalAmount,
+          paidAmount: paidAmount,
+          pendingCollections: pendingCount,
+        });
+
+        setDonationData([
+          { name: "Monthly", amount: donationByType.Monthly },
+          { name: "Yearly", amount: donationByType.Yearly },
+          { name: "One-time", amount: donationByType["One-time"] },
+        ]);
+
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        setLoading(false);
+      }
     };
-    fetchData();
+
+    fetchStats();
   }, []);
 
-  // Filter funds by type
-  const filteredFunds =
-    filterType === "All"
-      ? funds
-      : funds.filter((f) => f.type.toLowerCase() === filterType.toLowerCase());
+  const COLORS = ["#1E88E5", "#43A047", "#FB8C00"];
 
-  // Calculate totals
-  const totalPayment = members.reduce(
-    (sum, m) => sum + Number(m.paymentAmount || 0),
-    0
-  );
-  const totalPaid = funds.reduce((sum, f) => sum + Number(f.amount || 0), 0);
-  const totalPending = totalPayment - totalPaid;
-
-  // Sort funds by recent
-  const recentFunds = [...funds].sort(
-    (a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)
-  );
+  const cards = [
+    { label: "Total Members", value: stats.members, icon: "👥" },
+    { label: "Collecting Agents", value: stats.agents, icon: "🧾" },
+    { label: "Total Funds (LKR)", value: stats.totalFunds.toLocaleString(), icon: "💰" },
+    { label: "Paid Amount (LKR)", value: stats.paidAmount.toLocaleString(), icon: "✅" },
+    { label: "Pending Collections", value: stats.pendingCollections, icon: "⏳" },
+  ];
 
   return (
     <DashboardLayout>
-      <div className="container mt-4">
-        <h2 className="fw-bold text-primary mb-3">💰 Payment History</h2>
+      <div className="dashboard-container">
+        <h2 className="dashboard-title">Mosque Donation Dashboard</h2>
 
-        {/* Summary Boxes */}
-        <div className="d-flex gap-4 flex-wrap mb-4">
-          <div className="p-3 shadow rounded flex-fill text-center">
-            <h6>Total Payment</h6>
-            <h5>LKR {totalPayment.toLocaleString()}</h5>
-          </div>
-          <div className="p-3 shadow rounded flex-fill text-center">
-            <h6>Total Paid</h6>
-            <h5>LKR {totalPaid.toLocaleString()}</h5>
-          </div>
-          <div className="p-3 shadow rounded flex-fill text-center">
-            <h6>Pending Payment</h6>
-            <h5>LKR {totalPending.toLocaleString()}</h5>
-          </div>
-        </div>
+        {loading ? (
+          <p className="text-center mt-5">Loading dashboard data...</p>
+        ) : (
+          <>
+            {/* Cards Section */}
+            <div className="dashboard-cards">
+              {cards.map((item, index) => (
+                <div className="dashboard-card" key={index}>
+                  <div className="dashboard-card-icon">{item.icon}</div>
+                  <h3 className="dashboard-card-value">{item.value}</h3>
+                  <p className="dashboard-card-label">{item.label}</p>
+                </div>
+              ))}
+            </div>
 
-        {/* Filter Dropdown */}
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <label className="me-2 fw-bold text-secondary">Filter by:</label>
-            <select
-              className="form-select d-inline-block"
-              style={{ width: "180px" }}
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-            >
-              <option value="All">All</option>
-              <option value="One-time">One-time</option>
-              <option value="Monthly">Monthly</option>
-              <option value="Yearly">Yearly</option>
-            </select>
-          </div>
-        </div>
+            {/* Charts Section */}
+            <div className="dashboard-charts">
+              {/* Pie Chart - Donation Distribution */}
+              <div className="dashboard-chart">
+                <h4 className="chart-title">Donation Distribution (Paid Only)</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={donationData}
+                      dataKey="amount"
+                      nameKey="name"
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={100}
+                      label
+                    >
+                      {donationData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
 
-        {/* Recent Payments */}
-        <div className="mb-4">
-          <h5>🔹 Recent Activity</h5>
-          <div className="table-responsive shadow-sm">
-            {loading ? (
-              <p className="p-3">Loading recent payments...</p>
-            ) : recentFunds.length === 0 ? (
-              <p className="p-3">No transactions found.</p>
-            ) : (
-              <Table hover bordered className="align-middle text-center mb-0">
-                <thead className="table-light">
-                  <tr>
-                    <th>#</th>
-                    <th>Member ID</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Amount (LKR)</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentFunds.slice(0, 5).map((f, index) => {
-                    const member = members.find((m) => m.memberID === f.memberId);
-                    return (
-                      <tr key={f.id}>
-                        <td>{index + 1}</td>
-                        <td>{f.memberId}</td>
-                        <td>{member?.fullName || "N/A"}</td>
-                        <td className={f.type.toLowerCase()}>{f.type}</td>
-                        <td>LKR {Number(f.amount).toLocaleString()}</td>
-                        <td>{f.date || f.createdAt || "N/A"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            )}
-          </div>
-        </div>
-
-        {/* All Transactions */}
-        <div className="mb-4">
-          <h5>🔹 All Transactions</h5>
-          <div className="table-responsive shadow-sm">
-            {loading ? (
-              <p className="p-3">Loading transactions...</p>
-            ) : filteredFunds.length === 0 ? (
-              <p className="p-3">No transactions found.</p>
-            ) : (
-              <Table hover bordered className="align-middle text-center mb-0">
-                <thead className="table-primary">
-                  <tr>
-                    <th>#</th>
-                    <th>Member ID</th>
-                    <th>Name</th>
-                    <th>Type</th>
-                    <th>Amount (LKR)</th>
-                    <th>Date</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredFunds.map((f, index) => {
-                    const member = members.find((m) => m.memberID === f.memberId);
-                    return (
-                      <tr key={f.id}>
-                        <td>{index + 1}</td>
-                        <td>{f.memberId}</td>
-                        <td>{member?.fullName || "N/A"}</td>
-                        <td className={f.type.toLowerCase()}>{f.type}</td>
-                        <td>LKR {Number(f.amount).toLocaleString()}</td>
-                        <td>{f.date || f.createdAt || "N/A"}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </Table>
-            )}
-          </div>
-        </div>
+              {/* Bar Chart - Members vs Agents */}
+              <div className="dashboard-chart">
+                <h4 className="chart-title">Members vs Agents Overview</h4>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={[
+                      {
+                        name: "Counts",
+                        Members: stats.members,
+                        Agents: stats.agents,
+                      },
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="Members" fill="#1E88E5" />
+                    <Bar dataKey="Agents" fill="#43A047" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </DashboardLayout>
   );
